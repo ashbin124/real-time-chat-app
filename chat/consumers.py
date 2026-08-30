@@ -8,26 +8,50 @@ from .models import Conversation, Message
 
 class ChatConsumer(AsyncWebsocketConsumer):
 
+    # Keep track of connected users
+    connected_users = {}
+
+
     async def connect(self):
 
-        self.conversation_id = self.scope["url_route"]["kwargs"]["conversation_id"]
+        self.conversation_id = (
+            self.scope["url_route"]["kwargs"]["conversation_id"]
+        )
 
         self.room_group_name = f"chat_{self.conversation_id}"
+
+        self.user = self.scope["user"]
+
+
+        # Add user to connection count
+
+        user_id = self.user.id
+
+        ChatConsumer.connected_users[user_id] = (
+            ChatConsumer.connected_users.get(user_id, 0) + 1
+        )
+
 
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
         )
 
+
         await self.accept()
 
-        # Tell everyone that this user is online
+
+        # Tell everyone this user is online
+
         await self.channel_layer.group_send(
             self.room_group_name,
             {
                 "type": "user_status",
-                "user_id": self.scope["user"].id,
-                "username": self.scope["user"].username,
+
+                "user_id": user_id,
+
+                "username": self.user.username,
+
                 "status": "online",
             }
         )
@@ -35,16 +59,36 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def disconnect(self, close_code):
 
-        # Tell everyone that this user is offline
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                "type": "user_status",
-                "user_id": self.scope["user"].id,
-                "username": self.scope["user"].username,
-                "status": "offline",
-            }
-        )
+        user_id = self.user.id
+
+
+        # Remove this connection
+
+        if user_id in ChatConsumer.connected_users:
+
+            ChatConsumer.connected_users[user_id] -= 1
+
+
+            # If no connections remain,
+            # user is actually offline
+
+            if ChatConsumer.connected_users[user_id] <= 0:
+
+                del ChatConsumer.connected_users[user_id]
+
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        "type": "user_status",
+
+                        "user_id": user_id,
+
+                        "username": self.user.username,
+
+                        "status": "offline",
+                    }
+                )
+
 
         await self.channel_layer.group_discard(
             self.room_group_name,
@@ -58,17 +102,29 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         message_text = data["message"]
 
-        # Save message to database
-        message_data = await self.save_message(message_text)
+
+        # Save message
+
+        message_data = await self.save_message(
+            message_text
+        )
+
 
         # Send message to everyone
+
         await self.channel_layer.group_send(
             self.room_group_name,
             {
                 "type": "chat_message",
+
                 "message": message_data["message"],
+
                 "sender_id": message_data["sender_id"],
-                "sender_username": message_data["sender_username"],
+
+                "sender_username": message_data[
+                    "sender_username"
+                ],
+
                 "timestamp": message_data["timestamp"],
             }
         )
@@ -81,16 +137,23 @@ class ChatConsumer(AsyncWebsocketConsumer):
             id=self.conversation_id
         )
 
+
         message = Message.objects.create(
             conversation=conversation,
-            sender=self.scope["user"],
+
+            sender=self.user,
+
             content=message_text
         )
 
+
         return {
             "message": message.content,
+
             "sender_id": message.sender.id,
+
             "sender_username": message.sender.username,
+
             "timestamp": message.created_at.isoformat(),
         }
 
@@ -99,9 +162,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         await self.send(
             text_data=json.dumps({
+
                 "message": event["message"],
+
                 "sender_id": event["sender_id"],
-                "sender_username": event["sender_username"],
+
+                "sender_username": event[
+                    "sender_username"
+                ],
+
                 "timestamp": event["timestamp"],
             })
         )
@@ -111,9 +180,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         await self.send(
             text_data=json.dumps({
+
                 "type": "status",
+
                 "user_id": event["user_id"],
+
                 "username": event["username"],
+
                 "status": event["status"],
             })
         )

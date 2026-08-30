@@ -4,168 +4,882 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Chat App</title>
+    <title>Real-Time Chat</title>
 
     <style>
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
 
-        body {
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
-            height: 100vh;
+        :root {
+            --bg: #080a12;
+            --sidebar: #0d101a;
+            --panel: #111522;
+            --border: rgba(255,255,255,0.08);
+            --text: #f5f7ff;
+            --muted: #8c93a8;
+            --purple: #7567f8;
+            --purple-light: #9b8cff;
         }
+
+        body {
+            font-family:
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+
+            min-height: 100vh;
+
+            color: var(--text);
+
+            background:
+                radial-gradient(
+                    circle at 10% 10%,
+                    rgba(117,103,248,0.25),
+                    transparent 30%
+                ),
+                radial-gradient(
+                    circle at 90% 90%,
+                    rgba(155,140,255,0.15),
+                    transparent 30%
+                ),
+                linear-gradient(
+                    135deg,
+                    #070912,
+                    #121529
+                );
+
+            overflow: hidden;
+        }
+
+
+        /* =========================
+           MAIN CONTAINER
+        ========================= */
 
         .chat-container {
             display: flex;
-            height: 100vh;
-            max-width: 1200px;
-            margin: auto;
-            background: white;
+
+            width: 94vw;
+            max-width: 1450px;
+
+            height: 92vh;
+
+            margin: 4vh auto;
+
+            overflow: hidden;
+
+            border:
+                1px solid var(--border);
+
+            border-radius: 26px;
+
+            background:
+                rgba(17,21,34,0.88);
+
+            box-shadow:
+                0 30px 100px rgba(0,0,0,0.55),
+                inset 0 1px 0 rgba(255,255,255,0.04);
+
+            backdrop-filter: blur(25px);
         }
+
+
+        /* =========================
+           SIDEBAR
+        ========================= */
 
         .sidebar {
-            width: 300px;
-            border-right: 1px solid #ddd;
-            padding: 20px;
+            width: 330px;
+
+            flex-shrink: 0;
+
+            padding: 28px 16px;
+
+            overflow-y: auto;
+
+            background:
+                rgba(9,12,21,0.82);
+
+            border-right:
+                1px solid var(--border);
         }
 
-        .sidebar h2 {
-            margin-bottom: 20px;
+
+        .sidebar-header {
+            padding:
+                5px 14px 25px;
         }
+
+
+        .sidebar-header h2 {
+            font-size: 26px;
+
+            font-weight: 750;
+
+            letter-spacing: -0.8px;
+        }
+
+
+        .sidebar-header p {
+            margin-top: 7px;
+
+            color: var(--muted);
+
+            font-size: 12px;
+        }
+
+
+        #users {
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 8px;
+        }
+
+
+        /* =========================
+           USER
+        ========================= */
 
         .user {
-            padding: 12px;
-            border-radius: 8px;
+            position: relative;
+
+            display: flex;
+
+            align-items: center;
+
+            min-height: 70px;
+
+            padding:
+                10px 14px 10px 70px;
+
+            border:
+                1px solid transparent;
+
+            border-radius: 17px;
+
+            color: #e9ebf5;
+
+            font-size: 15px;
+
+            font-weight: 600;
+
             cursor: pointer;
+
+            transition:
+                background 0.2s ease,
+                transform 0.2s ease,
+                border-color 0.2s ease;
         }
 
-        .user:hover {
-            background: #f0f0f0;
+
+        /* Avatar */
+
+        .user::before {
+            content: attr(data-initial);
+
+            position: absolute;
+
+            left: 14px;
+            top: 15px;
+
+            width: 40px;
+            height: 40px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border-radius: 50%;
+
+            color: white;
+
+            font-size: 14px;
+
+            font-weight: 700;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--purple),
+                    var(--purple-light)
+                );
+
+            box-shadow:
+                0 6px 20px
+                rgba(117,103,248,0.3);
         }
+
+
+        /* Status dot */
+
+        .user::after {
+            content: "";
+
+            position: absolute;
+
+            left: 44px;
+            top: 45px;
+
+            width: 10px;
+            height: 10px;
+
+            border:
+                2px solid #0d101a;
+
+            border-radius: 50%;
+
+            background: #555b70;
+        }
+
+
+        .user[data-status="online"]::after {
+            background: #35d399;
+
+            box-shadow:
+                0 0 8px
+                rgba(53,211,153,0.65);
+        }
+
+
+        .user[data-status="offline"]::after {
+            background: #555b70;
+
+            box-shadow: none;
+        }
+
+
+        .user:hover {
+            background:
+                rgba(255,255,255,0.06);
+
+            border-color:
+                rgba(255,255,255,0.06);
+
+            transform:
+                translateX(3px);
+        }
+
+
+        /* =========================
+           CHAT
+        ========================= */
 
         .chat {
             flex: 1;
+
+            min-width: 0;
+
             display: flex;
+
+            flex-direction: column;
+
+            background:
+                rgba(12,15,27,0.65);
+        }
+
+
+        /* =========================
+           HEADER
+        ========================= */
+
+        .chat-header {
+            min-height: 88px;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 14px;
+
+            padding:
+                16px 28px;
+
+            background:
+                rgba(17,21,34,0.75);
+
+            border-bottom:
+                1px solid var(--border);
+        }
+
+
+        .chat-avatar {
+            position: relative;
+
+            width: 47px;
+            height: 47px;
+
+            flex-shrink: 0;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border-radius: 50%;
+
+            color: white;
+
+            font-size: 16px;
+
+            font-weight: 700;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--purple),
+                    var(--purple-light)
+                );
+
+            box-shadow:
+                0 8px 25px
+                rgba(117,103,248,0.3);
+        }
+
+
+        /* Header status dot */
+
+        .chat-avatar::after {
+            content: "";
+
+            position: absolute;
+
+            right: -1px;
+            bottom: 1px;
+
+            width: 11px;
+            height: 11px;
+
+            border:
+                2px solid #111522;
+
+            border-radius: 50%;
+
+            background: #555b70;
+        }
+
+
+        .chat-avatar[data-status="online"]::after {
+            background: #35d399;
+
+            box-shadow:
+                0 0 8px
+                rgba(53,211,153,0.65);
+        }
+
+
+        .chat-avatar[data-status="offline"]::after {
+            background: #555b70;
+
+            box-shadow: none;
+        }
+
+
+        .chat-user-info {
+            display: flex;
+
             flex-direction: column;
         }
 
-        .chat-header {
-            padding: 20px;
-            border-bottom: 1px solid #ddd;
-            font-weight: bold;
+
+        #chat-title {
+            font-size: 18px;
+
+            font-weight: 700;
         }
 
+
         #chat-status {
-            font-size: 13px;
-            font-weight: normal;
             margin-top: 5px;
+
+            color: var(--muted);
+
+            font-size: 12px;
+
+            font-weight: 600;
         }
+
+
+        /* =========================
+           MESSAGES
+        ========================= */
 
         .messages {
             flex: 1;
-            padding: 20px;
+
+            min-height: 0;
+
+            display: flex;
+
+            flex-direction: column;
+
             overflow-y: auto;
+
+            padding:
+                30px 34px;
+
+            background:
+                radial-gradient(
+                    circle at 75% 15%,
+                    rgba(117,103,248,0.07),
+                    transparent 28%
+                );
         }
 
+
         .message {
-            margin-bottom: 12px;
-            padding: 10px 14px;
-            border-radius: 12px;
-            max-width: 60%;
-            background: #eee;
+            max-width: 65%;
+
+            margin-bottom: 13px;
+
+            padding:
+                12px 16px 8px;
+
+            border-radius: 18px;
+
+            font-size: 14px;
+
+            line-height: 1.5;
+
+            word-break: break-word;
+
+            animation:
+                messageAppear 0.2s ease;
         }
+
+
+        @keyframes messageAppear {
+
+            from {
+                opacity: 0;
+
+                transform:
+                    translateY(7px);
+            }
+
+            to {
+                opacity: 1;
+
+                transform:
+                    translateY(0);
+            }
+        }
+
+
+        /* MY MESSAGE */
 
         .message.mine {
             align-self: flex-end;
-            background: #007aff;
-            color: white;
+
             margin-left: auto;
+
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #6759e9,
+                    #8b6bf1
+                );
+
+            border:
+                1px solid
+                rgba(255,255,255,0.10);
+
+            border-bottom-right-radius: 5px;
+
+            box-shadow:
+                0 8px 25px
+                rgba(90,75,210,0.25);
         }
+
+
+        /* OTHER MESSAGE */
 
         .message.theirs {
             align-self: flex-start;
-            background: #e5e5ea;
-            color: black;
+
             margin-right: auto;
+
+            color: #e9ebf5;
+
+            background:
+                rgba(255,255,255,0.065);
+
+            border:
+                1px solid
+                rgba(255,255,255,0.08);
+
+            border-bottom-left-radius: 5px;
+
+            box-shadow:
+                0 5px 18px
+                rgba(0,0,0,0.15);
         }
+
 
         .message small {
             display: block;
-            font-size: 11px;
-            margin-top: 4px;
-            opacity: 0.7;
+
+            margin-top: 6px;
+
+            font-size: 10px;
+
+            line-height: 1;
+
+            text-align: right;
+
+            opacity: 0.55;
         }
+
+
+        /* =========================
+           INPUT
+        ========================= */
 
         .message-form {
             display: flex;
-            padding: 15px;
-            border-top: 1px solid #ddd;
+
+            align-items: center;
+
             gap: 10px;
+
+            padding:
+                17px 20px;
+
+            background:
+                rgba(10,13,24,0.85);
+
+            border-top:
+                1px solid var(--border);
         }
+
 
         .message-form input {
             flex: 1;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
+
+            min-width: 0;
+
+            height: 50px;
+
+            padding:
+                0 18px;
+
+            outline: none;
+
+            border:
+                1px solid
+                rgba(255,255,255,0.10);
+
+            border-radius: 16px;
+
+            color: white;
+
+            background:
+                rgba(255,255,255,0.055);
+
+            font-size: 14px;
+
+            transition: 0.2s ease;
         }
 
-        .message-form button {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            background: #007aff;
-            color: white;
+
+        .message-form input::placeholder {
+            color: #777e94;
         }
+
+
+        .message-form input:focus {
+            border-color:
+                rgba(117,103,248,0.7);
+
+            background:
+                rgba(255,255,255,0.075);
+
+            box-shadow:
+                0 0 0 4px
+                rgba(117,103,248,0.10);
+        }
+
+
+        /* =========================
+           SEND BUTTON
+        ========================= */
+
+        .message-form button {
+            width: 50px;
+
+            height: 50px;
+
+            flex-shrink: 0;
+
+            border: none;
+
+            border-radius: 16px;
+
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--purple),
+                    var(--purple-light)
+                );
+
+            cursor: pointer;
+
+            font-size: 0;
+
+            box-shadow:
+                0 8px 25px
+                rgba(117,103,248,0.3);
+
+            transition:
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+
+        .message-form button::after {
+            content: "➤";
+
+            font-size: 18px;
+        }
+
+
+        .message-form button:hover {
+            transform:
+                translateY(-2px);
+
+            box-shadow:
+                0 12px 30px
+                rgba(117,103,248,0.4);
+        }
+
+
+        .message-form button:active {
+            transform:
+                scale(0.94);
+        }
+
+
+        /* =========================
+           MOBILE
+        ========================= */
+
+        @media (max-width: 800px) {
+
+            .chat-container {
+                width: 100vw;
+
+                height: 100vh;
+
+                margin: 0;
+
+                border-radius: 0;
+            }
+
+
+            .sidebar {
+                width: 250px;
+            }
+
+
+            .messages {
+                padding:
+                    22px 17px;
+            }
+
+
+            .message {
+                max-width: 78%;
+            }
+
+        }
+
+
+        @media (max-width: 560px) {
+
+            .sidebar {
+                width: 76px;
+
+                padding:
+                    18px 8px;
+            }
+
+
+            .sidebar-header {
+                padding:
+                    4px 0 18px;
+            }
+
+
+            .sidebar-header h2 {
+                font-size: 13px;
+
+                text-align: center;
+            }
+
+
+            .sidebar-header p {
+                display: none;
+            }
+
+
+            .user {
+                width: 60px;
+
+                min-height: 58px;
+
+                padding: 0;
+
+                font-size: 0;
+            }
+
+
+            .user::before {
+                left: 10px;
+
+                top: 9px;
+            }
+
+
+            .user::after {
+                left: 41px;
+
+                top: 39px;
+            }
+
+
+            .chat-header {
+                min-height: 72px;
+
+                padding:
+                    12px 15px;
+            }
+
+
+            .chat-avatar {
+                width: 40px;
+
+                height: 40px;
+            }
+
+
+            .message-form {
+                padding: 10px;
+            }
+
+
+            .message-form input {
+                height: 45px;
+            }
+
+
+            .message-form button {
+                width: 45px;
+
+                height: 45px;
+            }
+
+        }
+
     </style>
+
 </head>
+
 
 <body>
 
+
 <div class="chat-container">
+
+
+    <!-- SIDEBAR -->
 
     <aside class="sidebar">
 
-        <h2>Users</h2>
+        <div class="sidebar-header">
+
+            <h2>Messages</h2>
+
+            <p>Select someone to start chatting</p>
+
+        </div>
+
 
         <div id="users">
-            <!-- Users will appear here -->
+
+            <!-- Users loaded by JavaScript -->
+
         </div>
 
     </aside>
 
 
+    <!-- CHAT -->
+
     <main class="chat">
+
 
         <header class="chat-header">
 
-            <span id="chat-title">
-                Select a user
-            </span>
 
-            <div id="chat-status"></div>
+            <div
+                class="chat-avatar"
+                id="chat-avatar"
+                data-status="offline"
+            >
+                ?
+            </div>
+
+
+            <div class="chat-user-info">
+
+                <span id="chat-title">
+                    Select a user
+                </span>
+
+
+                <div id="chat-status">
+                    Choose someone from the list
+                </div>
+
+            </div>
+
 
         </header>
 
 
-        <section class="messages" id="messages">
-            <!-- Messages will appear here -->
+        <section
+            class="messages"
+            id="messages"
+        >
+
         </section>
 
 
-        <form class="message-form" id="message-form">
+        <form
+            class="message-form"
+            id="message-form"
+        >
 
             <input
                 type="text"
                 id="message-input"
-                placeholder="Type a message..."
+                placeholder="Write a message..."
                 autocomplete="off"
             >
+
 
             <button type="submit">
                 Send
@@ -173,29 +887,43 @@
 
         </form>
 
+
     </main>
+
 
 </div>
 
 
 <script>
 
+
 const usersContainer =
     document.getElementById("users");
+
 
 const messagesContainer =
     document.getElementById("messages");
 
+
 const chatTitle =
     document.getElementById("chat-title");
+
 
 const chatStatus =
     document.getElementById("chat-status");
 
 
+const chatAvatar =
+    document.getElementById("chat-avatar");
+
+
 let currentConversationId = null;
 
+
 let chatSocket = null;
+
+
+let selectedUserId = null;
 
 
 const currentUser =
@@ -208,6 +936,7 @@ const currentUserId =
     currentUser
         ? currentUser.id
         : null;
+
 
 
 // ===============================
@@ -254,6 +983,26 @@ async function loadUsers() {
             user.username;
 
 
+        userElement.setAttribute(
+            "data-initial",
+            user.username
+                .charAt(0)
+                .toUpperCase()
+        );
+
+
+        userElement.setAttribute(
+            "data-user-id",
+            user.id
+        );
+
+
+        userElement.setAttribute(
+            "data-status",
+            "offline"
+        );
+
+
         userElement.addEventListener(
             "click",
             () => {
@@ -279,14 +1028,87 @@ async function loadUsers() {
 }
 
 
+
+// ===============================
+// UPDATE USER STATUS
+// ===============================
+
+function updateUserStatus(
+    userId,
+    status
+) {
+
+    const userElement =
+        document.querySelector(
+            `.user[data-user-id="${userId}"]`
+        );
+
+
+    if (userElement) {
+
+        userElement.setAttribute(
+            "data-status",
+            status
+        );
+
+    }
+
+
+    if (
+        Number(userId) ===
+        Number(selectedUserId)
+    ) {
+
+        chatAvatar.setAttribute(
+            "data-status",
+            status
+        );
+
+
+        if (status === "online") {
+
+            chatStatus.textContent =
+                "🟢 Online";
+
+        }
+
+        else {
+
+            chatStatus.textContent =
+                "⚫ Offline";
+
+        }
+
+    }
+
+}
+
+
+
 // ===============================
 // LOAD MESSAGES
 // ===============================
 
 async function loadMessages(user) {
 
+    selectedUserId =
+        user.id;
+
+
     chatTitle.textContent =
         user.username;
+
+
+    chatAvatar.textContent =
+        user.username
+            .charAt(0)
+            .toUpperCase();
+
+
+    chatAvatar.setAttribute(
+        "data-status",
+        "offline"
+    );
 
 
     chatStatus.textContent =
@@ -297,7 +1119,6 @@ async function loadMessages(user) {
         localStorage.getItem("token");
 
 
-    // Find or create conversation
     const conversationResponse =
         await fetch(
             `/api/conversations/with/${user.id}/`,
@@ -341,11 +1162,9 @@ async function loadMessages(user) {
     );
 
 
-    // Connect WebSocket
     connectWebSocket();
 
 
-    // Load existing messages
     const response =
         await fetch(
             `/api/conversations/${currentConversationId}/messages/`,
@@ -389,7 +1208,6 @@ async function loadMessages(user) {
         );
 
 
-        // Current user = right
         if (
             message.sender.id ===
             currentUserId
@@ -401,7 +1219,6 @@ async function loadMessages(user) {
 
         }
 
-        // Other user = left
         else {
 
             messageElement.classList.add(
@@ -411,7 +1228,6 @@ async function loadMessages(user) {
         }
 
 
-        // Timestamp
         const time =
             new Date(
                 message.created_at
@@ -443,8 +1259,9 @@ async function loadMessages(user) {
 }
 
 
+
 // ===============================
-// WEBSOCKET CONNECTION
+// WEBSOCKET
 // ===============================
 
 function connectWebSocket() {
@@ -456,7 +1273,6 @@ function connectWebSocket() {
     }
 
 
-    // Close previous connection
     if (chatSocket) {
 
         chatSocket.close();
@@ -480,7 +1296,6 @@ function connectWebSocket() {
         );
 
 
-    // Connected
     chatSocket.onopen =
         function() {
 
@@ -492,7 +1307,6 @@ function connectWebSocket() {
         };
 
 
-    // Message received
     chatSocket.onmessage =
         function(event) {
 
@@ -500,37 +1314,18 @@ function connectWebSocket() {
                 JSON.parse(event.data);
 
 
-            // ===============================
-            // ONLINE / OFFLINE STATUS
-            // ===============================
+            // =========================
+            // STATUS
+            // =========================
 
             if (
                 data.type === "status"
             ) {
 
-                if (
-                    data.user_id !==
-                    currentUserId
-                ) {
-
-                    if (
-                        data.status ===
-                        "online"
-                    ) {
-
-                        chatStatus.textContent =
-                            "🟢 Online";
-
-                    }
-
-                    else {
-
-                        chatStatus.textContent =
-                            "⚫ Offline";
-
-                    }
-
-                }
+                updateUserStatus(
+                    data.user_id,
+                    data.status
+                );
 
 
                 return;
@@ -538,9 +1333,9 @@ function connectWebSocket() {
             }
 
 
-            // ===============================
-            // NEW CHAT MESSAGE
-            // ===============================
+            // =========================
+            // NEW MESSAGE
+            // =========================
 
             const messageElement =
                 document.createElement("div");
@@ -551,7 +1346,6 @@ function connectWebSocket() {
             );
 
 
-            // Current user = right
             if (
                 data.sender_id ===
                 currentUserId
@@ -563,7 +1357,6 @@ function connectWebSocket() {
 
             }
 
-            // Other user = left
             else {
 
                 messageElement.classList.add(
@@ -573,7 +1366,6 @@ function connectWebSocket() {
             }
 
 
-            // Timestamp
             const time =
                 new Date(
                     data.timestamp
@@ -603,7 +1395,6 @@ function connectWebSocket() {
         };
 
 
-    // Connection closed
     chatSocket.onclose =
         function() {
 
@@ -612,13 +1403,18 @@ function connectWebSocket() {
             );
 
 
-            chatStatus.textContent =
-                "⚫ Offline";
+            if (selectedUserId) {
+
+                updateUserStatus(
+                    selectedUserId,
+                    "offline"
+                );
+
+            }
 
         };
 
 
-    // WebSocket error
     chatSocket.onerror =
         function(error) {
 
@@ -630,6 +1426,7 @@ function connectWebSocket() {
         };
 
 }
+
 
 
 // ===============================
@@ -678,7 +1475,6 @@ messageForm.addEventListener(
         }
 
 
-        // Send through WebSocket
         if (
             chatSocket &&
             chatSocket.readyState ===
@@ -708,13 +1504,16 @@ messageForm.addEventListener(
 );
 
 
+
 // ===============================
 // START APP
 // ===============================
 
 loadUsers();
 
+
 </script>
 
 </body>
+
 </html>
